@@ -1,4 +1,4 @@
-            - name: Pkg Action
+name: Auto Build
   # You may pin to the exact commit or the version.
   # uses: lando/pkg-action@1b951b77b453f886e2c61c18ff15cd52a989098e
   uses: lando/pkg-action@v4.0.0
