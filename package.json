@@ -1,0 +1,12 @@
+{
+  "dependencies": {
+    "discord.js-selfbot-v13": "^3.0.2",
+    "prompt-sync": "^4.2.0"
+  },
+  "name": "owofarm",
+  "version": "1.0.0",
+  "main": "main.js",
+  "bin": {
+    "your-executable-name": "main.js"
+  }
+}
