@@ -43,6 +43,7 @@ async function retry(f, t, el = "Failed to execute function, retrying...") {
         } catch {
             rt += 1;
             console.log(el, `[${rt}]`);
+            await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }
 }
