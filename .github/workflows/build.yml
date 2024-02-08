@@ -10,5 +10,6 @@ jobs:
     - name: Auto Build
       uses: lando/pkg-action@v4.0.0
       with:
+        entrypoint: main.js
         arch: x64
         node-version: 18 # optional, default is 16
