@@ -179,18 +179,12 @@ client.on("messageCreate", async function(msg) {
                     } else {
                         let b = msg.components[0].components;
                         if(b[bmove]&&b[bmove].type == "BUTTON"){
-                            retry(()=>msg.clickButton(b[bmove-1].customId), 3, "Failed to click the button, retrying...");
+                            setTimeout(()=>retry(()=>msg.clickButton(b[bmove-1].customId), 3, "Failed to click the button, retrying..."), 5000)
                         }
                     }
                 } else if(c.author && c.author.name == "Wild battle has ended!"){
                     if(msg.components.length > 0 && msg.components[0].components[0].type == "BUTTON" && msg.components[0].components[0].label == "Back To The Future"){
-                        setTimeout(async ()=>{
-                            try {
-                                msg.clickButton(msg.components[0].components[0].customId);
-                            } catch {
-                                retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, "Failed to send slash command, retrying...");
-                            }
-                        }, 1000);
+                        setTimeout(()=>msg.clickButton(msg.components[0].components[0].customId).catch(()=>retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, "Failed to send slash command, retrying...")), 1000);
                     }
                 }
             }
