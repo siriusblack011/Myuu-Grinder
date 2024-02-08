@@ -179,7 +179,7 @@ client.on("messageCreate", async function(msg) {
                     } else {
                         let b = msg.components[0].components;
                         if(b[bmove]&&b[bmove].type == "BUTTON"){
-                            setTimeout(()=>retry(()=>msg.clickButton(b[bmove-1].customId), 3, "Failed to click the button, retrying..."), 5000)
+                            setTimeout(()=>retry(()=>msg.clickButton(b[bmove-1].customId), 3, "Failed to click the button, retrying..."), 500);
                         }
                     }
                 } else if(c.author && c.author.name == "Wild battle has ended!"){
