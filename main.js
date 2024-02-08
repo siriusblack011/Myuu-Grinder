@@ -1,4 +1,5 @@
 const bot = require('discord.js-selfbot-v13');
+const prompt = require("prompt-sync")({ sigint: true });
 const fs = require('node:fs');
 
 var cfg = { //Example config
@@ -160,7 +161,7 @@ client.on("messageCreate", function(msg) {
         if(msg.author.id == "438057969251254293" && msg.channelId == cfg.channel_id){
             if(msg.embeds.length > 0 && !finishRouting){
                 let c = msg.embeds[0];
-                if(msg.components.length > 0 && ((c.footer && c.footer.text.includes("Click a move number")) || (c.description && c.description.includes("A wild")) || c.author.name.includes("Vs.​"))){
+                if(msg.components.length > 0 && ((c.footer && c.footer.text.includes("Click a move number")) || (c.description && c.description.includes("A wild")))){
                     console.log("Enemy:", c.description.split("**")[1]);
                     if((c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.includes(e)) && cfg.options.detectPokemon)){
                         console.log("Shiny/Filtered Pokemon Detected!");
