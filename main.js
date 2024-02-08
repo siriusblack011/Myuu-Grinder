@@ -37,11 +37,10 @@ const client = new bot.Client();
 
 const pfx = ".";
 var isStart = false,
-    l, o, mc, finishRouting = true, bmove;
+    mc, bmove, routeNum;
 
 function stopL(){
     isStart = false;
-    clearInterval(l);
 }
 
 client.on('ready', async () => {
@@ -62,14 +61,10 @@ client.on("messageCreate", function(msg) {
                         if(args[2] && 0 < Number(args[2]) < 5){
                             isStart = true;
                             bmove = Number(args[2]);
+                            routeNum = args[1]
                             msg.channel.send(`> **[Myuu]** _Started at <#${cfg.channel_id}>!_`);
                             console.log(`Started!`);
-                            l = setInterval(()=>{
-                                if(finishRouting){
-                                    finishRouting = false
-                                    mc.sendSlash("438057969251254293", "route", args[1]);
-                                }
-                            }, 100);
+                            mc.sendSlash("438057969251254293", "route", routeNum);
                         } else {
                             msg.channel.send("> _Please choose vaild move (1 - 4)_");
                         }
@@ -158,7 +153,7 @@ client.on("messageCreate", function(msg) {
     }
     if(isStart){
         if(msg.author.id == "438057969251254293" && msg.channelId == cfg.channel_id){
-            if(msg.embeds.length > 0 && !finishRouting){
+            if(msg.embeds.length > 0){
                 let c = msg.embeds[0];
                 if(msg.components.length > 0 && ((c.footer && c.footer.text.includes("Click a move number")) || (c.description && c.description.includes("A wild")))){
                     console.log("Enemy:", c.description.split("**")[1]);
@@ -178,8 +173,16 @@ client.on("messageCreate", function(msg) {
                             }
                         }
                     }
-                } else if(c.author.name == "Wild battle has ended!"){
-                    finishRouting = true;
+                } else if(c.author.name && c.author.name == "Wild battle has ended!"){
+                    if(msg.components.length > 0 && msg.components[0].components[0].type == "BUTTON" && msg.components[0].components[0].label == "Back To The Future"){
+                        setTimeout(()=>{
+                            try {
+                                msg.clickButton(msg.components[0].components[0].customId);
+                            } catch {
+                                mc.sendSlash("438057969251254293", "route", routeNum);
+                            }
+                        }, 750);
+                    }
                 }
             }
         }
