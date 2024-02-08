@@ -17,4 +17,3 @@ jobs:
         entrypoint: 'main.js'
         arch: 'x64'
         node-version: '18'
-        pkg: 'latest'
