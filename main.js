@@ -173,7 +173,7 @@ client.on("messageCreate", function(msg) {
                             }
                         }
                     }
-                } else if(c.author.name && c.author.name == "Wild battle has ended!"){
+                } else if(c.author && c.author.name == "Wild battle has ended!"){
                     if(msg.components.length > 0 && msg.components[0].components[0].type == "BUTTON" && msg.components[0].components[0].label == "Back To The Future"){
                         setTimeout(()=>{
                             try {
@@ -181,7 +181,7 @@ client.on("messageCreate", function(msg) {
                             } catch {
                                 mc.sendSlash("438057969251254293", "route", routeNum);
                             }
-                        }, 750);
+                        }, 1000);
                     }
                 }
             }
