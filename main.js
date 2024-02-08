@@ -1,5 +1,4 @@
 const bot = require('discord.js-selfbot-v13');
-const prompt = require("prompt-sync")({ sigint: true });
 const fs = require('node:fs');
 
 var cfg = { //Example config
