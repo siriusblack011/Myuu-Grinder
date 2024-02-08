@@ -1,2 +1,2 @@
 # Myuu-Grinder
-Hate slash command
+Made for fun :) Didn't plan to maintain it.
