@@ -33,14 +33,15 @@ catch {
         savecfg(cfg);
 }
 
-function retry(f, t, el="Failed to execute function, retrying..."){
+async function retry(f, t, el = "Failed to execute function, retrying...") {
     let rt = 0;
-    while(rt < t){
+
+    while (rt < t) {
         try {
-            (f)();
+            await (f)();
             break;
         } catch {
-            rt += 1
+            rt += 1;
             console.log(el, `[${rt}]`);
         }
     }
@@ -62,7 +63,7 @@ client.on('ready', async () => {
     mc = client.channels.cache.get(cfg.channel_id);
 });
 
-client.on("messageCreate", function(msg) {
+client.on("messageCreate", async function(msg) {
     if(msg.author.id == client.user.id){
         var args = msg.content.split(" ");
         if(args[0][0] == pfx){
@@ -183,7 +184,7 @@ client.on("messageCreate", function(msg) {
                     }
                 } else if(c.author && c.author.name == "Wild battle has ended!"){
                     if(msg.components.length > 0 && msg.components[0].components[0].type == "BUTTON" && msg.components[0].components[0].label == "Back To The Future"){
-                        setTimeout(()=>{
+                        setTimeout(async ()=>{
                             try {
                                 msg.clickButton(msg.components[0].components[0].customId);
                             } catch {
@@ -196,5 +197,4 @@ client.on("messageCreate", function(msg) {
         }
     }
 });
-
 client.login(cfg.token);
