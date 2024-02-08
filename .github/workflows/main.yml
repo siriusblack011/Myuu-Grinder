@@ -1,6 +1,7 @@
 name: Auto Build
 jobs:
   build:
+    runs-on: windows-latest
     steps:
       - name: Auto Build
       uses: lando/pkg-action@v4.0.0
@@ -16,7 +17,7 @@ jobs:
     # Additional options and flags to pass into pkg
         options: # optional
     # The operating system to build for win|linux|macos
-        os: windows-latest # optional, default is ${{ runner.os }}
+        os: # optional, default is ${{ runner.os }}
     # The version on @vercel/pkg to use
         pkg: # optional, default is pkg@5.8.1
     # Hidden flag for input testing
