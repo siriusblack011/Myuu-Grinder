@@ -1,12 +1,13 @@
 const bot = require('discord.js-selfbot-v13');
-const prompt = require("prompt-sync")({ sigint: true });
 const fs = require('node:fs');
 
 var cfg = { //Example config
     "token": "",
     "channel_id": "",
+    "pokemonFilter": ["​​Greninja-Ash"],
     "options": {
-        "detectShiny": true
+        "detectShiny": true,
+        "detectPokemon": true
     }
 }
 // Utils
@@ -61,7 +62,7 @@ client.on("messageCreate", function(msg) {
                         if(args[2] && 0 < Number(args[2]) < 5){
                             isStart = true;
                             bmove = Number(args[2]);
-                            msg.channel.send(`> **[${o}]** _Started at <#${cfg.channel_id}>!_`);
+                            msg.channel.send(`> **[Myuu]** _Started at <#${cfg.channel_id}>!_`);
                             console.log(`Started!`);
                             l = setInterval(()=>{
                                 if(finishRouting){
@@ -92,6 +93,33 @@ client.on("messageCreate", function(msg) {
                     }
                     msg.delete();
                     break;
+
+                case "pkfilter":
+                    switch(args[1]){
+                        case "list":
+                            msg.channel.send(`> Filter List: \`${cfg.pokemonFilter.join(", ")}\``);
+                            break;
+                        
+                        case "add":
+                            var pks = args.slice(2);
+                            cfg.pokemonFilter = cfg.pokemonFilter.concat(pks);
+                            savecfg();
+                            msg.channel.send(`> Added \`${pks.join(", ")}\``)
+                            break;
+
+                        case "del":
+                            var pks = args.slice(2);
+                            for(let i of pks){
+                                if(cfg.pokemonFilter.indexOf(i) != -1){
+                                    cfg.pokemonFilter.splice(cfg.pokemonFilter.indexOf(i), 1);
+                                }
+                            }
+                            savecfg();
+                            msg.channel.send(`> Removed \`${pks.join(", ")}\``);
+                            break;
+                    }
+                    msg.delete();
+                    break;
                 
                 case "toggle":
                     if(cfg.options[args[1]]!=undefined){
@@ -119,7 +147,10 @@ client.on("messageCreate", function(msg) {
 > **${pfx}setchannel** _channelId_
 > \\- Set new channel for route command -
 > **${pfx}toggle** _option_
-> \\- Toggle an option (ex: detectShiny). Leave empty for list of options -`);
+> \\- Toggle an option (ex: detectShiny). Leave empty for list of options -
+> **${pfx}pkfilter** list/add/del (pokemonName?)
+> \\- Pokemon Filter Manager (list doesn't need argument.) -
+`);
                     msg.delete();
                     break;
             }
@@ -129,10 +160,10 @@ client.on("messageCreate", function(msg) {
         if(msg.author.id == "438057969251254293" && msg.channelId == cfg.channel_id){
             if(msg.embeds.length > 0 && !finishRouting){
                 let c = msg.embeds[0];
-                if(msg.components.length > 0 && msg.embeds[0].footer.includes("Click a move")){
+                if(msg.components.length > 0 && ((c.footer && c.footer.text.includes("Click a move number")) || (c.description && c.description.includes("A wild")) || c.author.name.includes("Vs.​"))){
                     console.log("Enemy:", c.description.split("**")[1]);
-                    if((c.description.includes("★")||c.author.name.includes("★"))&&cfg.options.detectShiny){
-                        console.log("Shiny Detected!");
+                    if((c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.includes(e)) && cfg.options.detectPokemon)){
+                        console.log("Shiny/Filtered Pokemon Detected!");
                         mc.send(`<@${client.user.id}>`).then(e=>{
                             e.markUnread();
                         });
