@@ -8,11 +8,10 @@ jobs:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
-    - uses: actions/setup-node@v3
-    - uses: actions/upload-artifact@v3
+    - uses: actions/setup-node@v4
     - name: Auto Build
       uses: lando/pkg-action@v4.0.0
       with:
-        entrypoint: main.js
-        arch: x64
-        node-version: 18 # optional, default is 16
+        entrypoint: 'main.js'
+        arch: 'x64'
+        node-version: '18' # optional, default is 16
