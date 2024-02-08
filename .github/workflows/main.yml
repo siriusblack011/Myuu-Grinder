@@ -1,16 +1,13 @@
+on:
+  push:
+    branches: [ "master" ]
+
 jobs:
   build:
     runs-on: windows-latest
     steps:
-      - name: Auto Build
+    - name: Auto Build
       uses: lando/pkg-action@v4.0.0
       with:
-        entrypoint: 
         arch: x64
-        config: # optional, default is package.json
         node-version: 18 # optional, default is 16
-        options: # optional
-        os: # optional, default is ${{ runner.os }}
-        pkg: # optional, default is pkg@5.8.1
-        test: # optional
-        upload: # optional, default is true
