@@ -35,24 +35,26 @@ catch {
 
 async function retry(f, t, el = "Failed to execute function, retrying...") {
     let rt = 0;
-
     while (rt < t) {
         try {
             await (f)();
-            break;
+            return true;
         } catch {
             rt += 1;
             console.log(el, `[${rt}]`);
             await new Promise(resolve => setTimeout(resolve, 1000));
         }
     }
+    return false;
 }
 
 const client = new bot.Client();
 
 const pfx = ".";
 var isStart = false,
-    mc, bmove, routeNum;
+    mc, bmove, routeNum,
+    BUTTON_CLICKED_FAILED = "Failed to click the button, retrying...",
+    SLASH_SEND_FAILED = "Failed to send slash command, retrying..."
 
 function stopL(){
     isStart = false;
@@ -180,12 +182,16 @@ client.on("messageCreate", async function(msg) {
                     } else {
                         let b = msg.components[0].components;
                         if(b[bmove]&&b[bmove].type == "BUTTON"){
-                            setTimeout(()=>retry(()=>msg.clickButton(b[bmove-1].customId), 3, "Failed to click the button, retrying..."), 500);
+                            setTimeout(()=>retry(()=>msg.clickButton(b[bmove-1].customId), 3, BUTTON_CLICKED_FAILED), 500);
                         }
                     }
                 } else if(c.author && c.author.name == "Wild battle has ended!"){
                     if(msg.components.length > 0 && msg.components[0].components[0].type == "BUTTON" && msg.components[0].components[0].label == "Back To The Future"){
-                        setTimeout(()=>msg.clickButton(msg.components[0].components[0].customId).catch(()=>retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, "Failed to send slash command, retrying...")), 1000);
+                        setTimeout(()=>{
+                            retry(()=>msg.clickButton(msg.components[0].components[0].customId), 3, BUTTON_CLICKED_FAILED).then((e)=>{
+                                if(!e)retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, SLASH_SEND_FAILED);
+                            });
+                        }, 1000);
                     }
                 }
             }
