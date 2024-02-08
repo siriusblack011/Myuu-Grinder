@@ -7,6 +7,8 @@ jobs:
   build:
     runs-on: windows-latest
     steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v3
     - name: Auto Build
       uses: lando/pkg-action@v4.0.0
       with:
