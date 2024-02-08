@@ -1,24 +1,26 @@
 name: Auto Build
-  # You may pin to the exact commit or the version.
-  # uses: lando/pkg-action@1b951b77b453f886e2c61c18ff15cd52a989098e
-  uses: lando/pkg-action@v4.0.0
-  with:
+jobs:
+  build:
+    steps:
+      - name: Auto Build
+      uses: lando/pkg-action@v4.0.0
+      with:
     # The binary entrypoint path
-    entrypoint: 
+        entrypoint: 
     # The architecture to build for x64|amd64|aarch64|arm64
-    arch: x64
+        arch: x64
     # The config file to use
-    config: # optional, default is package.json
+        config: # optional, default is package.json
     # The node version to package with
-    node-version: 18 # optional, default is 16
+        node-version: 18 # optional, default is 16
     # Additional options and flags to pass into pkg
-    options: # optional
+        options: # optional
     # The operating system to build for win|linux|macos
-    os: # optional, default is ${{ runner.os }}
+        os: windows-latest # optional, default is ${{ runner.os }}
     # The version on @vercel/pkg to use
-    pkg: # optional, default is pkg@5.8.1
+        pkg: # optional, default is pkg@5.8.1
     # Hidden flag for input testing
-    test: # optional
+        test: # optional
     # Upload the artifacts. Useful if you need to grab them for downstream for things like code signing.
-    upload: # optional, default is true
+        upload: # optional, default is true
           
