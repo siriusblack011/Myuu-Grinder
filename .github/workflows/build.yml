@@ -5,13 +5,17 @@ on:
 
 jobs:
   build:
+    permissions:
+      contents: write
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v3
+    - uses: rymndhng/release-on-push-action@master
     - name: Auto Build
       uses: lando/pkg-action@v4.0.0
       with:
+        bump_version_scheme: minor
         entrypoint: main.js
         arch: x64
         node-version: 18 # optional, default is 16
