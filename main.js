@@ -169,7 +169,7 @@ client.on("messageCreate", function(msg) {
             if(msg.embeds.length > 0){
                 let c = msg.embeds[0];
                 if(msg.components.length > 0 && ((c.footer && c.footer.text.includes("Click a move number")) || (c.description && c.description.includes("A wild")))){
-                    console.log("Enemy:", c.description.split("**")[1]);
+                    if(c.description&&c.description.includes("**"))console.log("Enemy:", c.description.split("**")[1]);
                     if((c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.includes(e)) && cfg.options.detectPokemon)){
                         console.log("Shiny/Filtered Pokemon Detected!");
                         mc.send(`<@${client.user.id}>`).then(e=>{
