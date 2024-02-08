@@ -33,6 +33,19 @@ catch {
         savecfg(cfg);
 }
 
+function retry(f, t, el="Failed to execute function, retrying..."){
+    let rt = 0;
+    while(rt < t){
+        try {
+            (f)();
+            break;
+        } catch {
+            rt += 1
+            console.log(el, `[${rt}]`);
+        }
+    }
+}
+
 const client = new bot.Client();
 
 const pfx = ".";
@@ -165,12 +178,7 @@ client.on("messageCreate", function(msg) {
                     } else {
                         let b = msg.components[0].components;
                         if(b[bmove]&&b[bmove].type == "BUTTON"){
-                            try {
-                                msg.clickButton(b[bmove-1].customId);
-                            } catch {
-                                console.log("Failed to click the button. Retrying...");
-                                msg.clickButton(b[bmove-1].customId);
-                            }
+                            retry(()=>msg.clickButton(b[bmove-1].customId), 3, "Failed to click the button, retrying...");
                         }
                     }
                 } else if(c.author && c.author.name == "Wild battle has ended!"){
@@ -179,7 +187,7 @@ client.on("messageCreate", function(msg) {
                             try {
                                 msg.clickButton(msg.components[0].components[0].customId);
                             } catch {
-                                mc.sendSlash("438057969251254293", "route", routeNum);
+                                retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, "Failed to send slash command, retrying...");
                             }
                         }, 1000);
                     }
