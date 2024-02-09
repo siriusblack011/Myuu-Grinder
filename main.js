@@ -1,6 +1,6 @@
-const bot = require('discord.js-selfbot-v13');
+const bot = require("discord.js-selfbot-v13");
 const prompt = require("prompt-sync")({ sigint: true });
-const fs = require('node:fs');
+const fs = require("node:fs");
 
 var cfg = { //Example config
     "token": "",
@@ -9,7 +9,8 @@ var cfg = { //Example config
     "pokemonFilter": ["​​Greninja"],
     "options": {
         "detectShiny": true,
-        "detectPokemon": true
+        "detectPokemon": true,
+        "randomMoveIfFailed": false
     }
 }
 // Utils
@@ -20,6 +21,14 @@ function savecfg(){
             fs.close(f, ()=>{});
         });
     }
+}
+
+function randint(min=0, max=1, exclude=[]) {
+    var r = Math.floor(Math.random() * (max - min) + min);
+    while(exclude.some(e=>e==r)){
+        r = Math.floor(Math.random() * (max - min) + min);
+    }
+    return r;
 }
 
 try {
@@ -60,7 +69,8 @@ const BUTTON_CLICKED_FAILED = "Failed to click the button, retrying...",
 var isStart = false,
     mc, bmove, routeNum,
     finishBattle = true,
-    battleCount = 0;
+    battleCount = 0,
+    foundShiny = false;
 
 function stopL(){
     isStart = false;
@@ -84,7 +94,7 @@ client.on("messageCreate", async function(msg) {
                         if(args[2] && 0 < Number(args[2]) < 5){
                             isStart = true;
                             battleCount = 0;
-                            bmove = Number(args[2]);
+                            bmove = Number(args[2])-1;
                             routeNum = args[1]
                             msg.channel.send(`> **[Myuu]** _Started at <#${cfg.channel_id}>!_`);
                             console.log(`Started!`);
@@ -197,19 +207,29 @@ client.on("messageCreate", async function(msg) {
                         battleCount += 1;
                         console.log(`Enemy ${battleCount}:`, c.description.split("**").filter(s=>s.includes("Lv"))[0]);
                     }
-                    if(c.author && (c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.toLocaleLowerCase().includes(e.toLowerCase())) && cfg.options.detectPokemon)){
+                    if(c.author && !foundShiny && (c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.toLocaleLowerCase().includes(e.toLowerCase())) && cfg.options.detectPokemon)){
                         console.log("Shiny/Filtered Pokemon Detected!");
+                        foundShiny = true;
                         mc.send(`<@${client.user.id}>`).then(e=>{
                             e.markUnread();
                         });
                     } else {
                         let b = msg.components[0].components;
                         if(b[bmove]&&b[bmove].type == "BUTTON"){
-                            setTimeout(()=>retry(()=>msg.clickButton(b[bmove-1].customId), 3, BUTTON_CLICKED_FAILED), 500);
+                            setTimeout(()=>retry(()=>msg.clickButton(b[bmove].customId), 3, BUTTON_CLICKED_FAILED).then((e)=>{
+                                if(!e){
+                                    if(cfg.options.randomMoveIfFailed){
+                                        retry(()=>msg.clickButton(b[randint(0, 4, [bmove])].customId), 3, BUTTON_CLICKED_FAILED);
+                                    } else {
+                                        console.log("Failed to do move, required user action...");
+                                    }
+                                }
+                            }), 500);
                         }
                     }
                 } else if(c.author && ["battle ended", "battle has ended"].some((e)=>c.author.name.includes(e))){
                     finishBattle = true;
+                    foundShiny = false;
                     if(msg.components.length > 0 && msg.components[0].components[0].type == "BUTTON" && msg.components[0].components[0].label == "Back To The Future"){
                         setTimeout(()=>{
                             retry(()=>msg.clickButton(msg.components[0].components[0].customId), 3, BUTTON_CLICKED_FAILED).then((e)=>{
