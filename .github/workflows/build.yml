@@ -11,13 +11,13 @@ jobs:
     - uses: actions/setup-node@v4
     - name: Install dependencies
       run: |
-        npm install
+        npm ci
         npm install -g pkg
     - name: Build
       run: |
         pkg main.js -t node18-win-x64 -o MyuuGrinder.exe
         mkdir notifier
-        copy /Y .\node_modules\node-notifier\vendor\snoreToast\snoretoast-x64.exe .\notifier\
+        Copy-Item -Path .\node_modules\node-notifier\vendor\snoreToast\snoretoast-x64.exe -Destination .\notifier\ -Force
     - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
