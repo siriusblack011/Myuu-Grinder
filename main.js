@@ -195,6 +195,10 @@ client.on("messageCreate", async function(msg) {
                                 if(!e)retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, SLASH_SEND_FAILED);
                             });
                         }, 1000);
+                    } else {
+                        setTimeout(()=>{
+                            retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, SLASH_SEND_FAILED);
+                        }, 1000);
                     }
                 } else if(c.title && c.title.includes("in a battle") && finishBattle){
                     setTimeout(()=>{
