@@ -1,6 +1,7 @@
 const bot = require("discord.js-selfbot-v13");
 const prompt = require("prompt-sync")({ sigint: true });
 const fs = require("node:fs");
+const { notify } = require('node-notifier');
 
 var cfg = { //Example config
     "token": "",
@@ -212,6 +213,10 @@ client.on("messageCreate", async function(msg) {
                         foundShiny = true;
                         mc.send(`<@${client.user.id}>`).then(e=>{
                             e.markUnread();
+                            notify({
+                                title: "Pokemon detected!",
+                                message: "Shiny/Filtered Pokemon Detected!"
+                            });
                         });
                     } else {
                         let b = msg.components[0].components;
@@ -222,6 +227,10 @@ client.on("messageCreate", async function(msg) {
                                         retry(()=>msg.clickButton(b[randint(0, 4, [bmove])].customId), 3, BUTTON_CLICKED_FAILED);
                                     } else {
                                         console.log("Failed to do move, required user action...");
+                                        notify({
+                                            title: "Button not respond!",
+                                            message: "Failed to do move, required user action..."
+                                        });
                                     }
                                 }
                             }), 500);
