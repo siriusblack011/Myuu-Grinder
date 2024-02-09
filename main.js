@@ -50,12 +50,14 @@ async function retry(f, t, el = "Failed to execute function, retrying...") {
 
 const client = new bot.Client();
 
-const pfx = ".";
+const pfx = ".",
+    BUTTON_CLICKED_FAILED = "Failed to click the button, retrying...",
+    SLASH_SEND_FAILED = "Failed to send slash command, retrying...";
+
 var isStart = false,
     mc, bmove, routeNum,
     finishBattle = true,
-    BUTTON_CLICKED_FAILED = "Failed to click the button, retrying...",
-    SLASH_SEND_FAILED = "Failed to send slash command, retrying..."
+    battleCount = 0;
 
 function stopL(){
     isStart = false;
@@ -70,7 +72,7 @@ client.on('ready', async () => {
 client.on("messageCreate", async function(msg) {
     if(msg.author.id == client.user.id){
         var args = msg.content.split(" ");
-        if(args[0][0] == pfx){
+        if(args[0].startsWith(pfx)){
             let scmd = args[0].slice(1);
             switch(scmd){
                 //MAIN COMMAND
@@ -78,6 +80,7 @@ client.on("messageCreate", async function(msg) {
                     if(!isStart){
                         if(args[2] && 0 < Number(args[2]) < 5){
                             isStart = true;
+                            battleCount = 0;
                             bmove = Number(args[2]);
                             routeNum = args[1]
                             msg.channel.send(`> **[Myuu]** _Started at <#${cfg.channel_id}>!_`);
@@ -155,15 +158,21 @@ client.on("messageCreate", async function(msg) {
 > ## Command List
 > **${pfx}route** _routeNumber_ _move_
 > \\- Auto routing -
-> **${pfx}help**
-> \\- Help Page -
-> **${pfx}setchannel** _channelId_
-> \\- Set new channel for route command -
 > **${pfx}toggle** _option_
 > \\- Toggle an option (ex: detectShiny). Leave empty for list of options -
 > **${pfx}pkfilter** list/add/del (pokemonName?)
 > \\- Pokemon Filter Manager (list doesn't need argument.) -
-`);
+> **${pfx}help**
+> \\- Help Page -
+> **${pfx}setchannel** _channelId_
+> \\- Set new channel for route command -
+> **${pfx}prefix**
+> \\- Show current bot prefix -`);
+                    msg.delete();
+                    break;
+                
+                case "prefix":
+                    msg.channel.send(`> **Bot prefix:** \`${pfx}\``);
                     msg.delete();
                     break;
             }
@@ -175,7 +184,10 @@ client.on("messageCreate", async function(msg) {
                 let c = msg.embeds[0];
                 if(msg.components.length > 0 && ((c.footer && c.footer.text.includes("Click a move number")) || (c.description && c.description.includes("A wild")))){
                     finishBattle = false;
-                    if(c.description&&c.description.includes("**"))console.log("Enemy:", c.description.split("**")[1]);
+                    if(c.description&&c.description.includes("**")){
+                        battleCount += 1;
+                        console.log(`Enemy ${battleCount}:`, c.description.split("**").filter(s=>s.includes("Lv"))[0]);
+                    }
                     if((c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.includes(e)) && cfg.options.detectPokemon)){
                         console.log("Shiny/Filtered Pokemon Detected!");
                         mc.send(`<@${client.user.id}>`).then(e=>{
@@ -203,7 +215,7 @@ client.on("messageCreate", async function(msg) {
                 } else if(c.title && c.title.includes("in a battle") && finishBattle){
                     setTimeout(()=>{
                         retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, SLASH_SEND_FAILED);
-                    }, 500);
+                    }, 1000);
                 }
             }
         }
