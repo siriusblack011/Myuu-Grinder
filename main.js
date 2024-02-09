@@ -1,10 +1,12 @@
 const bot = require('discord.js-selfbot-v13');
+const prompt = require("prompt-sync")({ sigint: true });
 const fs = require('node:fs');
 
 var cfg = { //Example config
     "token": "",
     "channel_id": "",
-    "pokemonFilter": ["​​Greninja-Ash"],
+    "prefix": ".",
+    "pokemonFilter": ["​​Greninja"],
     "options": {
         "detectShiny": true,
         "detectPokemon": true
@@ -50,8 +52,7 @@ async function retry(f, t, el = "Failed to execute function, retrying...") {
 
 const client = new bot.Client();
 
-const pfx = ".",
-    BUTTON_CLICKED_FAILED = "Failed to click the button, retrying...",
+const BUTTON_CLICKED_FAILED = "Failed to click the button, retrying...",
     SLASH_SEND_FAILED = "Failed to send slash command, retrying...";
 
 var isStart = false,
@@ -72,8 +73,8 @@ client.on('ready', async () => {
 client.on("messageCreate", async function(msg) {
     if(msg.author.id == client.user.id){
         var args = msg.content.split(" ");
-        if(args[0].startsWith(pfx)){
-            let scmd = args[0].slice(1);
+        if(args[0].startsWith(cfg.prefix)){
+            let scmd = args[0].slice(cfg.prefix.length);
             switch(scmd){
                 //MAIN COMMAND
                 case "route":
@@ -156,23 +157,29 @@ client.on("messageCreate", async function(msg) {
                 case "help":
                     msg.channel.send(`> ### Help Page
 > ## Command List
-> **${pfx}route** _routeNumber_ _move_
+> **${cfg.prefix}route** _routeNumber_ _move_
 > \\- Auto routing -
-> **${pfx}toggle** _option_
+> **${cfg.prefix}toggle** _option_
 > \\- Toggle an option (ex: detectShiny). Leave empty for list of options -
-> **${pfx}pkfilter** list/add/del (pokemonName?)
-> \\- Pokemon Filter Manager (list doesn't need argument.) -
-> **${pfx}help**
+> **${cfg.prefix}pkfilter** list/add/del (pokemonName?)
+> \\- Pokemon Filter Manager (list doesn't need argument) -
+> **${cfg.prefix}help**
 > \\- Help Page -
-> **${pfx}setchannel** _channelId_
+> **${cfg.prefix}setchannel** _channelId_
 > \\- Set new channel for route command -
-> **${pfx}prefix**
-> \\- Show current bot prefix -`);
+> **${cfg.prefix}prefix**
+> \\- Show/Set current bot prefix -`);
                     msg.delete();
                     break;
                 
                 case "prefix":
-                    msg.channel.send(`> **Bot prefix:** \`${pfx}\``);
+                    if(args[1]){
+                        cfg.prefix = args[1];
+                        savecfg();
+                        msg.channel.send(`> Set prefix to \`${args[1]}\``);
+                    } else {
+                        msg.channel.send(`> **Bot prefix:** \`${cfg.prefix}\``);
+                    }
                     msg.delete();
                     break;
             }
@@ -188,7 +195,7 @@ client.on("messageCreate", async function(msg) {
                         battleCount += 1;
                         console.log(`Enemy ${battleCount}:`, c.description.split("**").filter(s=>s.includes("Lv"))[0]);
                     }
-                    if((c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.includes(e)) && cfg.options.detectPokemon)){
+                    if(c.author && (c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.toLocaleLowerCase().includes(e.toLowerCase())) && cfg.options.detectPokemon)){
                         console.log("Shiny/Filtered Pokemon Detected!");
                         mc.send(`<@${client.user.id}>`).then(e=>{
                             e.markUnread();
