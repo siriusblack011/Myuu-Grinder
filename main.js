@@ -14,10 +14,12 @@ var cfg = { //Example config
 }
 // Utils
 function savecfg(){
-    fs.open("./config.json", "w", (_, f) => {
-        fs.write(f, JSON.stringify(cfg, null, 2), ()=>{});
-        fs.close(f, ()=>{});
-    });
+    if(cfg){
+        fs.open("./config.json", "w", (_, f) => {
+            fs.write(f, JSON.stringify(cfg, null, 2), ()=>{});
+            fs.close(f, ()=>{});
+        });
+    }
 }
 
 try {
@@ -222,7 +224,7 @@ client.on("messageCreate", async function(msg) {
                 } else if(c.title && c.title.includes("in a battle") && finishBattle){
                     setTimeout(()=>{
                         retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, SLASH_SEND_FAILED);
-                    }, 1000);
+                    }, 3000);
                 }
             }
         }
