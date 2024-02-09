@@ -53,6 +53,7 @@ const client = new bot.Client();
 const pfx = ".";
 var isStart = false,
     mc, bmove, routeNum,
+    finishBattle = true,
     BUTTON_CLICKED_FAILED = "Failed to click the button, retrying...",
     SLASH_SEND_FAILED = "Failed to send slash command, retrying..."
 
@@ -173,6 +174,7 @@ client.on("messageCreate", async function(msg) {
             if(msg.embeds.length > 0){
                 let c = msg.embeds[0];
                 if(msg.components.length > 0 && ((c.footer && c.footer.text.includes("Click a move number")) || (c.description && c.description.includes("A wild")))){
+                    finishBattle = false;
                     if(c.description&&c.description.includes("**"))console.log("Enemy:", c.description.split("**")[1]);
                     if((c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.includes(e)) && cfg.options.detectPokemon)){
                         console.log("Shiny/Filtered Pokemon Detected!");
@@ -185,7 +187,8 @@ client.on("messageCreate", async function(msg) {
                             setTimeout(()=>retry(()=>msg.clickButton(b[bmove-1].customId), 3, BUTTON_CLICKED_FAILED), 500);
                         }
                     }
-                } else if(c.author && c.author.name == "Wild battle has ended!"){
+                } else if(c.author && ["battle ended", "battle has ended"].some((e)=>c.author.name.includes(e))){
+                    finishBattle = true;
                     if(msg.components.length > 0 && msg.components[0].components[0].type == "BUTTON" && msg.components[0].components[0].label == "Back To The Future"){
                         setTimeout(()=>{
                             retry(()=>msg.clickButton(msg.components[0].components[0].customId), 3, BUTTON_CLICKED_FAILED).then((e)=>{
@@ -193,6 +196,10 @@ client.on("messageCreate", async function(msg) {
                             });
                         }, 1000);
                     }
+                } else if(c.title && c.title.includes("in a battle") && finishBattle){
+                    setTimeout(()=>{
+                        retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, SLASH_SEND_FAILED);
+                    }, 500);
                 }
             }
         }
