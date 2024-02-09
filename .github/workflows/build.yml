@@ -10,10 +10,19 @@ jobs:
     - uses: actions/checkout@v4
     - uses: actions/setup-node@v4
     - name: Install dependencies
-      run: npm install
+      run: |
+        npm install
+        npm install -g pkg
     - name: Build
-      uses: lando/pkg-action@v4.0.0
+      run: |
+        pkg main.js -t node18-win-x64 -o MyuuGrinder.exe
+        mkdir notifier
+        copy /Y ./node_modules/node-notifier/vendor/snoreToast/snoretoast-x64.exe ./notifier/
+    - name: Upload artifacts
+    - uses: actions/upload-artifact@v4
       with:
-        entrypoint: 'main.js'
-        arch: 'x64'
-        node-version: '18'
+        name: MyuuGrinder
+        path: |
+          ./MyuuGrinder.exe
+          ./notifier/snoretoast-x64.exe
+    
