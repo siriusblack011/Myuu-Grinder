@@ -8,10 +8,15 @@ var cfg = { //Example config
     "channel_id": "",
     "prefix": ".",
     "pokemonFilter": ["​​Greninja"],
+    "autocatch": {
+        "type": "pokeball",
+        "amount": 5
+    },
     "options": {
         "detectShiny": true,
         "detectPokemon": true,
-        "randomMoveIfFailed": false
+        "randomMoveIfFailed": true,
+        "autoCatch": false
     }
 }
 // Utils
@@ -21,6 +26,24 @@ function savecfg(){
             fs.write(f, JSON.stringify(cfg, null, 2), ()=>{});
             fs.close(f, ()=>{});
         });
+    }
+}
+
+class IntervalManager{
+    constructor(){
+        this.intervals = {}
+    }
+    get list(){
+        return this.intervals;
+    }
+    add(name, handler, timeout){
+        this.intervals[name] = setInterval(handler, timeout);
+        return this.intervals[name];
+    }
+
+    clear(name){
+        clearInterval(this.intervals[name]);
+        return delete this.intervals[name];
     }
 }
 
@@ -67,11 +90,15 @@ const client = new bot.Client();
 const BUTTON_CLICKED_FAILED = "Failed to click the button, retrying...",
     SLASH_SEND_FAILED = "Failed to send slash command, retrying...";
 
+const im = new IntervalManager();
+
 var isStart = false,
     mc, bmove, routeNum,
     finishBattle = true,
     battleCount = 0,
-    foundShiny = false;
+    foundShiny = false,
+    throwTime = 1
+    catched = true;
 
 function stopL(){
     isStart = false;
@@ -208,9 +235,12 @@ client.on("messageCreate", async function(msg) {
                         battleCount += 1;
                         console.log(`Enemy ${battleCount}:`, c.description.split("**").filter(s=>s.includes("Lv"))[0]);
                     }
-                    if(c.author && !foundShiny && (c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.toLocaleLowerCase().includes(e.toLowerCase())) && cfg.options.detectPokemon)){
+                    let detector = c.author && ((c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.toLocaleLowerCase().includes(e.toLowerCase())) && cfg.options.detectPokemon));
+                    if(!foundShiny && detector){
                         console.log("Shiny/Filtered Pokemon Detected!");
                         foundShiny = true;
+                        throwTime = 0;
+                        catched = false;
                         mc.send(`<@${client.user.id}>`).then(e=>{
                             e.markUnread();
                             notify({
@@ -218,7 +248,7 @@ client.on("messageCreate", async function(msg) {
                                 message: "Shiny/Filtered Pokemon Detected!"
                             });
                         });
-                    } else {
+                    } else if (!detector) {
                         let b = msg.components[0].components;
                         if(b[bmove]&&b[bmove].type == "BUTTON"){
                             setTimeout(()=>retry(()=>msg.clickButton(b[bmove].customId), 3, BUTTON_CLICKED_FAILED).then((e)=>{
@@ -246,13 +276,23 @@ client.on("messageCreate", async function(msg) {
                             });
                         }, 1000);
                     } else {
+                        if(c.description && c.description.includes("have caught")){
+                            catched = true;
+                            console.log("Catch pokemon successfully!");
+                        }
                         setTimeout(()=>{
                             retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, SLASH_SEND_FAILED);
                         }, 1000);
                     }
-                } else if(c.title && c.title.includes("in a battle") && finishBattle){
+                } else if(c.title && ((c.title.includes("in a battle") && finishBattle) || c.title.toLowerCase().includes("time is up!"))){
                     setTimeout(()=>{
                         retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, SLASH_SEND_FAILED);
+                    }, 3000);
+                } else if(c.description && ["almost had it", "broke free"].some(e=>c.description.toLowerCase().includes(e)) && cfg.autocatch && foundShiny && !finishBattle && throwTime < cfg.autocatch.amount && !catched){
+                    throwTime += 1
+                    console.log(`Failed to catch pokemon, retrying... [${throwTime}/${cfg.autocatch.amount}]`)
+                    setTimeout(()=>{
+                        retry(()=>mc.sendSlash("438057969251254293", "throw", cfg.autocatch.type), 3, SLASH_SEND_FAILED);
                     }, 3000);
                 }
             }
