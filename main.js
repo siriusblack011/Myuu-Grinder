@@ -70,6 +70,14 @@ catch {
         savecfg(cfg);
 }
 
+function objToMsg(title, obj){
+    let s = "> ## " + title;
+    for(let i of Object.keys(obj)){
+        s += `\n> **${i}:** \`${obj[i]}\``;
+    }
+    return s;
+}
+
 async function retry(f, t, el = "Failed to execute function, retrying...") {
     let rt = 0;
     while (rt < t) {
@@ -88,7 +96,8 @@ async function retry(f, t, el = "Failed to execute function, retrying...") {
 const client = new bot.Client();
 
 const BUTTON_CLICKED_FAILED = "Failed to click the button, retrying...",
-    SLASH_SEND_FAILED = "Failed to send slash command, retrying...";
+    SLASH_SEND_FAILED = "Failed to send slash command, retrying...",
+    MYUU_BOT_ID = "438057969251254293";
 
 const im = new IntervalManager();
 
@@ -97,7 +106,7 @@ var isStart = false,
     finishBattle = true,
     battleCount = 0,
     foundShiny = false,
-    throwTime = 1
+    throwTime = 1,
     catched = true;
 
 function stopL(){
@@ -126,7 +135,7 @@ client.on("messageCreate", async function(msg) {
                             routeNum = args[1]
                             msg.channel.send(`> **[Myuu]** _Started at <#${cfg.channel_id}>!_`);
                             console.log(`Started!`);
-                            mc.sendSlash("438057969251254293", "route", routeNum);
+                            mc.sendSlash(MYUU_BOT_ID, "route", routeNum);
                         } else {
                             msg.channel.send("> _Please choose vaild move (1 - 4)_");
                         }
@@ -153,6 +162,8 @@ client.on("messageCreate", async function(msg) {
 
                 case "pkfilter":
                     switch(args[1]){
+                        case "":
+                        case undefined:
                         case "list":
                             msg.channel.send(`> Filter List: \`${cfg.pokemonFilter.join(", ")}\``);
                             break;
@@ -177,6 +188,27 @@ client.on("messageCreate", async function(msg) {
                     }
                     msg.delete();
                     break;
+
+                case "autocatch":
+                    switch(args[1]){
+                        case "":
+                        case undefined:
+                        case "info":
+                            msg.channel.send(objToMsg("Auto Catch Info", cfg.autocatch));
+                        break;
+
+                        case "set":
+                            if(cfg.autocatch[args[2]] && args[3]){
+                                cfg.autocatch[args[2]] = args[3];
+                                savecfg();
+                                msg.channel.send(`> Set new **${args[2]}**'s value to \`${args[3]}\``)
+                            } else {
+                                msg.channel.send("> No option found!");
+                            }
+                            break;
+                    }
+                    msg.delete();
+                    break;
                 
                 case "toggle":
                     if(cfg.options[args[1]]!=undefined){
@@ -184,11 +216,7 @@ client.on("messageCreate", async function(msg) {
                         savecfg();
                         msg.channel.send(`> **Toggled** _${args[1]}_`);
                     } else {
-                        let s = "> ## Options"
-                        for(let i of Object.keys(cfg.options)){
-                            s += `\n> **${i}**: ${cfg.options[i]}`
-                        }
-                        msg.channel.send(s);
+                        msg.channel.send(objToMsg("Bot Options", cfg.options));
                     }
                     msg.delete();
                     break;
@@ -199,10 +227,12 @@ client.on("messageCreate", async function(msg) {
 > ## Command List
 > **${cfg.prefix}route** _routeNumber_ _move_
 > \\- Auto routing -
-> **${cfg.prefix}toggle** _option_
-> \\- Toggle an option (ex: detectShiny). Leave empty for list of options -
-> **${cfg.prefix}pkfilter** list/add/del (pokemonName?)
-> \\- Pokemon Filter Manager (list doesn't need argument) -
+> **${cfg.prefix}toggle** _option?_
+> \\- Toggle an option (ex: detectShiny). -
+> **${cfg.prefix}pkfilter** list/add/del _pokemonName?_
+> \\- Pokemon filter manager (list doesn't need argument) -
+> **${cfg.prefix}autocatch** info/set _option?_
+> \\- Auto catch pokemon manager -
 > **${cfg.prefix}help**
 > \\- Help Page -
 > **${cfg.prefix}setchannel** _channelId_
@@ -226,7 +256,7 @@ client.on("messageCreate", async function(msg) {
         }
     }
     if(isStart){
-        if(msg.author.id == "438057969251254293" && msg.channelId == cfg.channel_id){
+        if(msg.author.id == MYUU_BOT_ID && msg.channelId == cfg.channel_id){
             if(msg.embeds.length > 0){
                 let c = msg.embeds[0];
                 if(msg.components.length > 0 && ((c.footer && c.footer.text.includes("Click a move number")) || (c.description && c.description.includes("A wild")))){
@@ -235,11 +265,18 @@ client.on("messageCreate", async function(msg) {
                         battleCount += 1;
                         console.log(`Enemy ${battleCount}:`, c.description.split("**").filter(s=>s.includes("Lv"))[0]);
                     }
+                    if(cfg.options.autoCatch && foundShiny && throwTime < Number(cfg.autocatch.amount) && !catched && !finishBattle){
+                        throwTime += 1
+                        console.log(`Catching pokemon... [${throwTime}/${cfg.autocatch.amount}]`)
+                        setTimeout(()=>{
+                            retry(()=>mc.sendSlash(MYUU_BOT_ID, "throw", cfg.autocatch.type), 3, SLASH_SEND_FAILED);
+                        }, 3000);
+                    }
                     let detector = c.author && ((c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.toLocaleLowerCase().includes(e.toLowerCase())) && cfg.options.detectPokemon));
                     if(!foundShiny && detector){
                         console.log("Shiny/Filtered Pokemon Detected!");
                         foundShiny = true;
-                        throwTime = 0;
+                        throwTime = 1;
                         catched = false;
                         mc.send(`<@${client.user.id}>`).then(e=>{
                             e.markUnread();
@@ -248,6 +285,12 @@ client.on("messageCreate", async function(msg) {
                                 message: "Shiny/Filtered Pokemon Detected!"
                             });
                         });
+                        if(cfg.options.autoCatch){
+                            console.log(`Trying to catch pokemon... [${throwTime}/${cfg.autocatch.amount}]`);
+                            setTimeout(()=>{
+                                retry(()=>mc.sendSlash(MYUU_BOT_ID, "throw", cfg.autocatch.type), 3, SLASH_SEND_FAILED);
+                            }, 3000);
+                        }
                     } else if (!detector) {
                         let b = msg.components[0].components;
                         if(b[bmove]&&b[bmove].type == "BUTTON"){
@@ -272,7 +315,7 @@ client.on("messageCreate", async function(msg) {
                     if(msg.components.length > 0 && msg.components[0].components[0].type == "BUTTON" && msg.components[0].components[0].label == "Back To The Future"){
                         setTimeout(()=>{
                             retry(()=>msg.clickButton(msg.components[0].components[0].customId), 3, BUTTON_CLICKED_FAILED).then((e)=>{
-                                if(!e)retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, SLASH_SEND_FAILED);
+                                if(!e)retry(()=>mc.sendSlash(MYUU_BOT_ID, "route", routeNum), 3, SLASH_SEND_FAILED);
                             });
                         }, 1000);
                     } else {
@@ -281,18 +324,12 @@ client.on("messageCreate", async function(msg) {
                             console.log("Catch pokemon successfully!");
                         }
                         setTimeout(()=>{
-                            retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, SLASH_SEND_FAILED);
+                            retry(()=>mc.sendSlash(MYUU_BOT_ID, "route", routeNum), 3, SLASH_SEND_FAILED);
                         }, 1000);
                     }
                 } else if(c.title && ((c.title.includes("in a battle") && finishBattle) || c.title.toLowerCase().includes("time is up!"))){
                     setTimeout(()=>{
-                        retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, SLASH_SEND_FAILED);
-                    }, 3000);
-                } else if((c.description && ["almost had it", "broke free"].some(e=>c.description.toLowerCase().includes(e)) || !finishBattle) && cfg.options.autoCatch && foundShiny && throwTime < cfg.autocatch.amount && !catched){
-                    throwTime += 1
-                    console.log(`Failed to catch pokemon, retrying... [${throwTime}/${cfg.autocatch.amount}]`)
-                    setTimeout(()=>{
-                        retry(()=>mc.sendSlash("438057969251254293", "throw", cfg.autocatch.type), 3, SLASH_SEND_FAILED);
+                        retry(()=>mc.sendSlash(MYUU_BOT_ID, "route", routeNum), 3, SLASH_SEND_FAILED);
                     }, 3000);
                 }
             }
