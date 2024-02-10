@@ -259,7 +259,7 @@ client.on("messageCreate", async function(msg) {
         if(msg.author.id == MYUU_BOT_ID && msg.channelId == cfg.channel_id){
             if(msg.embeds.length > 0){
                 let c = msg.embeds[0];
-                if(msg.components.length > 0 && ((c.footer && c.footer.text.includes("Click a move number")) || (c.description && c.description.includes("A wild")))){
+                if(msg.components.length > 0 && ((c.footer && c.footer.text.includes("Click a move number")) || (c.description && c.description.includes("A wild") || (c.author && c.author.name.includes("Vs."))))){
                     finishBattle = false;
                     if(c.description&&c.description.includes("**")){
                         battleCount += 1;
