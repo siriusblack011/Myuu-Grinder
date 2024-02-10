@@ -307,7 +307,7 @@ client.on("messageCreate", async function(msg) {
                             setTimeout(()=>retry(()=>msg.clickButton(b[bmove].customId), 3, BUTTON_CLICKED_FAILED).then((e)=>{
                                 if(!e){
                                     if(cfg.options.randomMoveIfFailed){
-                                        retry(()=>msg.clickButton(b[randint(0, 4, [bmove])].customId), 3, BUTTON_CLICKED_FAILED);
+                                        retry(()=>msg.clickButton(b[randint(0, b.length-1, [bmove])].customId), 3, BUTTON_CLICKED_FAILED);
                                     } else {
                                         console.log("Failed to do move, required user action...");
                                         notify({
