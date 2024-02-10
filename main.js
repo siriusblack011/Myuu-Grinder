@@ -102,12 +102,11 @@ const BUTTON_CLICKED_FAILED = "Failed to click the button, retrying...",
 const im = new IntervalManager();
 
 var isStart = false,
-    mc, bmove, routeNum,
+    mc, bmove, routeNum, currentPokemon,
     finishBattle = true,
     battleCount = 0,
-    foundShiny = false,
-    throwTime = 1,
-    catched = true;
+    foundPokemon = false,
+    throwTime = 1;
 
 function stopL(){
     isStart = false;
@@ -175,6 +174,7 @@ client.on("messageCreate", async function(msg) {
                             msg.channel.send(`> Added \`${pks.join(", ")}\``)
                             break;
 
+                        case "remove":
                         case "del":
                             var pks = args.slice(2);
                             for(let i of pks){
@@ -263,33 +263,43 @@ client.on("messageCreate", async function(msg) {
                     finishBattle = false;
                     if(c.description&&c.description.includes("**")){
                         battleCount += 1;
-                        console.log(`Enemy ${battleCount}:`, c.description.split("**").filter(s=>s.includes("Lv"))[0]);
+                        currentPokemon = c.description.split("**").filter(s=>s.includes("Lv"))[0];
+                        console.log(`Enemy ${battleCount}:`, currentPokemon);
                     }
-                    if(cfg.options.autoCatch && foundShiny && throwTime < Number(cfg.autocatch.amount) && !catched && !finishBattle){
-                        throwTime += 1
-                        console.log(`Catching pokemon... [${throwTime}/${cfg.autocatch.amount}]`)
-                        setTimeout(()=>{
-                            retry(()=>mc.sendSlash(MYUU_BOT_ID, "throw", cfg.autocatch.type), 3, SLASH_SEND_FAILED);
-                        }, 3000);
+                    if(cfg.options.autoCatch && foundPokemon){
+                        if(throwTime < Number(cfg.autocatch.amount) && !finishBattle){
+                            throwTime += 1
+                            console.log(`Catching pokemon... [${throwTime}/${cfg.autocatch.amount}]`)
+                            setTimeout(()=>{
+                                retry(()=>mc.sendSlash(MYUU_BOT_ID, "throw", cfg.autocatch.type), 3, SLASH_SEND_FAILED);
+                            }, 1500);
+                        } else {
+                            mc.send(`<@${client.user.id}>`).then(e=>{
+                                e.markUnread();
+                                notify({
+                                    title: "Failed to catch pokemon",
+                                    message: `Failed to catch ${currentPokemon}!`
+                                });
+                            });
+                        }
                     }
                     let detector = c.author && ((c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.toLocaleLowerCase().includes(e.toLowerCase())) && cfg.options.detectPokemon));
-                    if(!foundShiny && detector){
-                        console.log("Shiny/Filtered Pokemon Detected!");
-                        foundShiny = true;
+                    if(!foundPokemon && detector){
+                        console.log(`Shiny/Filtered Pokemon "${currentPokemon}" Detected!`);
+                        foundPokemon = true;
                         throwTime = 1;
-                        catched = false;
                         mc.send(`<@${client.user.id}>`).then(e=>{
                             e.markUnread();
                             notify({
                                 title: "Pokemon detected!",
-                                message: "Shiny/Filtered Pokemon Detected!"
+                                message: `Shiny/Filtered Pokemon "${currentPokemon}" Detected!`
                             });
                         });
                         if(cfg.options.autoCatch){
                             console.log(`Trying to catch pokemon... [${throwTime}/${cfg.autocatch.amount}]`);
                             setTimeout(()=>{
                                 retry(()=>mc.sendSlash(MYUU_BOT_ID, "throw", cfg.autocatch.type), 3, SLASH_SEND_FAILED);
-                            }, 3000);
+                            }, 1500);
                         }
                     } else if (!detector) {
                         let b = msg.components[0].components;
@@ -311,7 +321,7 @@ client.on("messageCreate", async function(msg) {
                     }
                 } else if(c.author && ["battle ended", "battle has ended"].some((e)=>c.author.name.includes(e))){
                     finishBattle = true;
-                    foundShiny = false;
+                    foundPokemon = false;
                     if(msg.components.length > 0 && msg.components[0].components[0].type == "BUTTON" && msg.components[0].components[0].label == "Back To The Future"){
                         setTimeout(()=>{
                             retry(()=>msg.clickButton(msg.components[0].components[0].customId), 3, BUTTON_CLICKED_FAILED).then((e)=>{
@@ -320,7 +330,6 @@ client.on("messageCreate", async function(msg) {
                         }, 1000);
                     } else {
                         if(c.description && c.description.includes("have caught")){
-                            catched = true;
                             console.log("Catch pokemon successfully!");
                         }
                         setTimeout(()=>{
