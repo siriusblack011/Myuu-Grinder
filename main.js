@@ -288,7 +288,7 @@ client.on("messageCreate", async function(msg) {
                     setTimeout(()=>{
                         retry(()=>mc.sendSlash("438057969251254293", "route", routeNum), 3, SLASH_SEND_FAILED);
                     }, 3000);
-                } else if(c.description && ["almost had it", "broke free"].some(e=>c.description.toLowerCase().includes(e)) && cfg.autocatch && foundShiny && !finishBattle && throwTime < cfg.autocatch.amount && !catched){
+                } else if((c.description && ["almost had it", "broke free"].some(e=>c.description.toLowerCase().includes(e)) || !finishBattle) && cfg.options.autoCatch && foundShiny && throwTime < cfg.autocatch.amount && !catched){
                     throwTime += 1
                     console.log(`Failed to catch pokemon, retrying... [${throwTime}/${cfg.autocatch.amount}]`)
                     setTimeout(()=>{
