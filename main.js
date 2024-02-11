@@ -16,7 +16,8 @@ var cfg = { //Example config
         "detectShiny": true,
         "detectPokemon": true,
         "randomMoveIfFailed": true,
-        "autoCatch": false
+        "autoCatch": false,
+        "showSummary": true
     }
 }
 // Utils
@@ -26,24 +27,6 @@ function savecfg(){
             fs.write(f, JSON.stringify(cfg, null, 2), ()=>{});
             fs.close(f, ()=>{});
         });
-    }
-}
-
-class IntervalManager{
-    constructor(){
-        this.intervals = {}
-    }
-    get list(){
-        return this.intervals;
-    }
-    add(name, handler, timeout){
-        this.intervals[name] = setInterval(handler, timeout);
-        return this.intervals[name];
-    }
-
-    clear(name){
-        clearInterval(this.intervals[name]);
-        return delete this.intervals[name];
     }
 }
 
@@ -99,17 +82,15 @@ const BUTTON_CLICKED_FAILED = "Failed to click the button, retrying...",
     SLASH_SEND_FAILED = "Failed to send slash command, retrying...",
     MYUU_BOT_ID = "438057969251254293";
 
-const im = new IntervalManager();
-
 var isStart = false,
     mc, bmove, routeNum, currentPokemon,
     finishBattle = true,
-    battleCount = 0,
     foundPokemon = false,
     throwTime = 1;
 
-function stopL(){
-    isStart = false;
+var summary = {
+    battleCount: 0,
+    foundPokemonCount: 0
 }
 
 client.on('ready', async () => {
@@ -129,7 +110,7 @@ client.on("messageCreate", async function(msg) {
                     if(!isStart){
                         if(args[2] && 0 < Number(args[2]) < 5){
                             isStart = true;
-                            battleCount = 0;
+                            Object.keys(summary).forEach(k=>summary[k]=0);
                             bmove = Number(args[2])-1;
                             routeNum = args[1]
                             msg.channel.send(`> **[Myuu]** _Started at <#${cfg.channel_id}>!_`);
@@ -139,8 +120,15 @@ client.on("messageCreate", async function(msg) {
                             msg.channel.send("> _Please choose vaild move (1 - 4)_");
                         }
                     } else {
-                        stopL();
-                        msg.channel.send(`> **[+]** _Stopped!_`);
+                        isStart = false;
+                        s = "> **[+]** _Stopped!_";
+                        if(cfg.options.showSummary){
+                            s += `
+> ## Summary:
+> **+) Total battle:** ${summary.battleCount}
+> **+) Found shiny/filtered:** ${summary.foundPokemonCount}`
+                        }
+                        msg.channel.send(s);
                         console.log(`[+] Stopped!`);
                     }
                     msg.delete();
@@ -262,9 +250,9 @@ client.on("messageCreate", async function(msg) {
                 if(msg.components.length > 0 && ((c.footer && c.footer.text.includes("Click a move number")) || (c.description && c.description.includes("A wild") || (c.author && c.author.name.includes("Vs."))))){
                     finishBattle = false;
                     if(c.description&&c.description.includes("**")){
-                        battleCount += 1;
+                        summary.battleCount += 1;
                         currentPokemon = c.description.split("**").filter(s=>s.includes("Lv"))[0];
-                        console.log(`Enemy ${battleCount}:`, currentPokemon);
+                        console.log(`Enemy ${summary.battleCount}:`, currentPokemon);
                     }
                     if(cfg.options.autoCatch && foundPokemon){
                         if(throwTime < Number(cfg.autocatch.amount) && !finishBattle){
@@ -285,6 +273,7 @@ client.on("messageCreate", async function(msg) {
                     }
                     let detector = c.author && ((c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.toLocaleLowerCase().includes(e.toLowerCase())) && cfg.options.detectPokemon));
                     if(!foundPokemon && detector){
+                        summary.foundPokemonCount += 1;
                         console.log(`Shiny/Filtered Pokemon "${currentPokemon}" Detected!`);
                         foundPokemon = true;
                         throwTime = 1;
