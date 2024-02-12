@@ -257,7 +257,7 @@ client.on("messageCreate", async function(msg) {
                     if(cfg.options.autoCatch && foundPokemon){
                         if(throwTime < Number(cfg.autocatch.amount) && !finishBattle){
                             throwTime += 1
-                            console.log(`Catching pokemon... [${throwTime}/${cfg.autocatch.amount}]`)
+                            console.log(`Catching pokemon... [${throwTime}/${cfg.autocatch.amount}]`);
                             setTimeout(()=>{
                                 retry(()=>mc.sendSlash(MYUU_BOT_ID, "throw", cfg.autocatch.type), 3, SLASH_SEND_FAILED);
                             }, 1500);
