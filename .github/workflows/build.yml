@@ -24,11 +24,22 @@ jobs:
         pkg main.js -t node18-win-x64 -o MyuuGrinder.exe
         mkdir notifier
         Copy-Item -Path .\node_modules\node-notifier\vendor\snoreToast\snoretoast-x64.exe -Destination .\notifier\ -Force
-    - name: Upload artifacts
-      uses: actions/upload-artifact@v4
+    - name: Zip Files
+      uses: vimtor/action-zip@1.2
       with:
-        name: MyuuGrinder
-        path: |
+        dest: MyuuGrinder.zip
+        files: |
           .\MyuuGrinder.exe
           .\notifier/snoretoast-x64.exe
+    - name: Update release
+      uses: andelf/nightly-release@main
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: dev
+        name: 'Myuu Grinder'
+        body: |
+          Auto build for commit ${github.sha}.
+        files: |
+          .\MyuuGrinder.zip
     
