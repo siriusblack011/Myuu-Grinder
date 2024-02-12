@@ -25,7 +25,7 @@ jobs:
         mkdir notifier
         Copy-Item -Path .\node_modules\node-notifier\vendor\snoreToast\snoretoast-x64.exe -Destination .\notifier\ -Force
     - name: Zip Files
-      uses: vimtor/action-zip@1.2
+      uses: vimtor/action-zip@1.1
       with:
         dest: MyuuGrinder.zip
         files: |
