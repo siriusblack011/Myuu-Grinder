@@ -90,7 +90,8 @@ var isStart = false,
 
 var summary = {
     battleCount: 0,
-    foundPokemonCount: 0
+    foundPokemonCount: 0,
+    foundPokemons: []
 }
 
 client.on('ready', async () => {
@@ -110,7 +111,18 @@ client.on("messageCreate", async function(msg) {
                     if(!isStart){
                         if(args[2] && 0 < Number(args[2]) < 5){
                             isStart = true;
-                            Object.keys(summary).forEach(k=>summary[k]=0);
+                            Object.keys(summary).forEach((k)=>{
+                                if(k&&k.constructor){
+                                    switch(k.constructor){
+                                        case Array:
+                                            summary[k] = [];
+                                        case Number:
+                                            summary[k] = 0;
+                                        case Object:
+                                            summary[k] = {}
+                                    }
+                                }
+                            });
                             bmove = Number(args[2])-1;
                             routeNum = args[1]
                             msg.channel.send(`> **[Myuu]** _Started at <#${cfg.channel_id}>!_`);
@@ -126,7 +138,8 @@ client.on("messageCreate", async function(msg) {
                             s += `
 > ## Summary:
 > **+) Total battle:** ${summary.battleCount}
-> **+) Found shiny/filtered:** ${summary.foundPokemonCount}`
+> **+) Found shiny/filtered:** ${summary.foundPokemonCount}
+> **+) Found list:** ${summary.foundPokemons.join(", ")}`
                         }
                         msg.channel.send(s);
                         console.log(`[+] Stopped!`);
@@ -159,7 +172,7 @@ client.on("messageCreate", async function(msg) {
                             var pks = args.slice(2);
                             cfg.pokemonFilter = cfg.pokemonFilter.concat(pks);
                             savecfg();
-                            msg.channel.send(`> Added \`${pks.join(", ")}\``)
+                            msg.channel.send(`> Added \`${pks.join(", ")}\``);
                             break;
 
                         case "remove":
@@ -257,7 +270,7 @@ client.on("messageCreate", async function(msg) {
                     if(cfg.options.autoCatch && foundPokemon){
                         if(throwTime < Number(cfg.autocatch.amount) && !finishBattle){
                             throwTime += 1
-                            console.log(`Catching pokemon... [${throwTime}/${cfg.autocatch.amount}]`);
+                            console.log(`Catching pokemon... [${throwTime}/${cfg.autocatch.amount}]`)
                             setTimeout(()=>{
                                 retry(()=>mc.sendSlash(MYUU_BOT_ID, "throw", cfg.autocatch.type), 3, SLASH_SEND_FAILED);
                             }, 1500);
@@ -274,6 +287,7 @@ client.on("messageCreate", async function(msg) {
                     let detector = c.author && ((c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.toLocaleLowerCase().includes(e.toLowerCase())) && cfg.options.detectPokemon));
                     if(!foundPokemon && detector){
                         summary.foundPokemonCount += 1;
+                        summary.foundPokemons.push(currentPokemon);
                         console.log(`Shiny/Filtered Pokemon "${currentPokemon}" Detected!`);
                         foundPokemon = true;
                         throwTime = 1;
@@ -325,7 +339,7 @@ client.on("messageCreate", async function(msg) {
                             retry(()=>mc.sendSlash(MYUU_BOT_ID, "route", routeNum), 3, SLASH_SEND_FAILED);
                         }, 1000);
                     }
-                } else if(c.title && ((c.title.includes("in a battle") && finishBattle) || c.title.toLowerCase().includes("time is up!"))){
+                } else if(((((c.title && c.title.includes("in a battle")) || (c.description && c.description.includes("You are currently engaged in a"))) && finishBattle) || (c.title && c.title.toLowerCase().includes("time is up!")))){
                     setTimeout(()=>{
                         retry(()=>mc.sendSlash(MYUU_BOT_ID, "route", routeNum), 3, SLASH_SEND_FAILED);
                     }, 3000);
