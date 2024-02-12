@@ -30,7 +30,7 @@ jobs:
         dest: MyuuGrinder.zip
         files: |
           .\MyuuGrinder.exe
-          .\notifier/snoretoast-x64.exe
+          .\notifier\snoretoast-x64.exe
     - name: Update release
       uses: andelf/nightly-release@main
       env:
