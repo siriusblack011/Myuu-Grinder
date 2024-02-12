@@ -139,7 +139,7 @@ client.on("messageCreate", async function(msg) {
 > ## Summary:
 > **+) Total battle:** ${summary.battleCount}
 > **+) Found shiny/filtered:** ${summary.foundPokemonCount}
-> **+) Found list:** ${summary.foundPokemons.join(", ")}`
+> **+) Found pokemons:** ${summary.foundPokemons.join(", ")}`
                         }
                         msg.channel.send(s);
                         console.log(`[+] Stopped!`);
@@ -215,7 +215,7 @@ client.on("messageCreate", async function(msg) {
                     if(cfg.options[args[1]]!=undefined){
                         cfg.options[args[1]] = !cfg.options[args[1]];
                         savecfg();
-                        msg.channel.send(`> **Toggled** _${args[1]}_`);
+                        msg.channel.send(`> **Toggled** _${args[1]}_ to \`${cfg.options[args[1]]}\``);
                     } else {
                         msg.channel.send(objToMsg("Bot Options", cfg.options));
                     }
@@ -342,7 +342,7 @@ client.on("messageCreate", async function(msg) {
                 } else if(((((c.title && c.title.includes("in a battle")) || (c.description && c.description.includes("You are currently engaged in a"))) && finishBattle) || (c.title && c.title.toLowerCase().includes("time is up!")))){
                     setTimeout(()=>{
                         retry(()=>mc.sendSlash(MYUU_BOT_ID, "route", routeNum), 3, SLASH_SEND_FAILED);
-                    }, 3000);
+                    }, 2000);
                 }
             }
         }
