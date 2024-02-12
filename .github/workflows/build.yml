@@ -5,7 +5,7 @@ on:
     paths-ignore:
       - 'README.md'
       - 'LICENSE'
-      - '.github/**'
+      #- '.github/**'
       - 'package.json'
       - 'package-lock.json'
 
@@ -29,6 +29,7 @@ jobs:
       uses: vimtor/action-zip@v1.2
       with:
         dest: MyuuGrinder.zip
+        recursive: false
         files: notifier/ MyuuGrinder.exe
     - name: Update release
       uses: andelf/nightly-release@main
