@@ -29,9 +29,7 @@ jobs:
       uses: vimtor/action-zip@v1.2
       with:
         dest: MyuuGrinder.zip
-        files: |
-          .\MyuuGrinder.exe
-          .\notifier
+        files: notifier/ MyuuGrinder.exe
     - name: Update release
       uses: andelf/nightly-release@main
       env:
@@ -40,7 +38,6 @@ jobs:
         tag_name: 'dev'
         name: 'Myuu Grinder'
         body: |
-          Auto build for commit ${github.sha}.
+          Auto build for commit ${{ github.sha }}.
         files: |
           .\MyuuGrinder.zip
-    
