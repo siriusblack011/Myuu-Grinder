@@ -83,10 +83,10 @@ const BUTTON_CLICKED_FAILED = "Failed to click the button, retrying...",
     MYUU_BOT_ID = "438057969251254293";
 
 var isStart = false,
-    mc, bmove, routeNum, currentPokemon,
+    mc, bmove, routeNum, throwTime, currentPokemon,
     finishBattle = true,
     foundPokemon = false,
-    throwTime = 1;
+    trainerBattle = false;
 
 var summary = {
     battleCount: 0,
@@ -267,6 +267,9 @@ client.on("messageCreate", async function(msg) {
                         currentPokemon = c.description.split("**").filter(s=>s.includes("Lv"))[0];
                         console.log(`Enemy ${summary.battleCount}:`, currentPokemon);
                     }
+                    if(c.footer&&c.footer.text.includes("Opponent's team")){
+                        trainerBattle = true;
+                    }
                     if(cfg.options.autoCatch && foundPokemon){
                         if(throwTime < Number(cfg.autocatch.amount) && !finishBattle){
                             throwTime += 1
@@ -284,7 +287,7 @@ client.on("messageCreate", async function(msg) {
                             });
                         }
                     }
-                    let detector = c.author && ((c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.toLocaleLowerCase().includes(e.toLowerCase())) && cfg.options.detectPokemon));
+                    let detector = c.author && !trainerBattle && ((c.author.name.includes("★") && cfg.options.detectShiny) || (cfg.pokemonFilter.some(e=>c.author.name.toLocaleLowerCase().includes(e.toLowerCase())) && cfg.options.detectPokemon));
                     if(!foundPokemon && detector){
                         summary.foundPokemonCount += 1;
                         summary.foundPokemons.push(currentPokemon);
@@ -325,6 +328,7 @@ client.on("messageCreate", async function(msg) {
                 } else if(c.author && ["battle ended", "battle has ended"].some((e)=>c.author.name.includes(e))){
                     finishBattle = true;
                     foundPokemon = false;
+                    trainerBattle = false;
                     if(msg.components.length > 0 && msg.components[0].components[0].type == "BUTTON" && msg.components[0].components[0].label == "Back To The Future"){
                         setTimeout(()=>{
                             retry(()=>msg.clickButton(msg.components[0].components[0].customId), 3, BUTTON_CLICKED_FAILED).then((e)=>{
