@@ -1,6 +1,5 @@
 # Myuu-Grinder
 #### Made for fun :) Didn't plan to maintain it.
-### If you're too lazy to install NodeJS, download auto build exe here: https://github.com/tungdo0602/Myuu-Grinder/actions
 ### Default prefix: .
 ### Features:
 #### Auto routing (obviously)
