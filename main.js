@@ -17,7 +17,8 @@ var cfg = { //Example config
         "detectPokemon": true,
         "randomMoveIfFailed": true,
         "autoCatch": false,
-        "showSummary": true
+        "showSummary": true,
+        "autoEvolve": false
     }
 }
 // Utils
@@ -83,10 +84,11 @@ const BUTTON_CLICKED_FAILED = "Failed to click the button, retrying...",
     MYUU_BOT_ID = "438057969251254293";
 
 var isStart = false,
-    mc, bmove, routeNum, throwTime, currentPokemon,
+    mc, bmove, routeNum, currentPokemon, evolveMsgId,
     finishBattle = true,
     foundPokemon = false,
-    trainerBattle = false;
+    trainerBattle = false,
+    throwTime = 1;
 
 var summary = {
     battleCount: 0,
@@ -100,7 +102,7 @@ client.on('ready', async () => {
     mc = client.channels.cache.get(cfg.channel_id);
 });
 
-client.on("messageCreate", async function(msg) {
+client.on("messageCreate", function(msg) {
     if(msg.author.id == client.user.id){
         var args = msg.content.split(" ");
         if(args[0].startsWith(cfg.prefix)){
@@ -347,9 +349,25 @@ client.on("messageCreate", async function(msg) {
                     setTimeout(()=>{
                         retry(()=>mc.sendSlash(MYUU_BOT_ID, "route", routeNum), 3, SLASH_SEND_FAILED);
                     }, 2000);
+                } else if(c.footer && c.footer.includes("Do you want to evolve")){
+                    if(msg.components.length > 0){
+                        evolveMsgId = msg.id;
+                        msg.clickButton(msg.components[0].components.filter(b=>b.label == (cfg.options.autoEvolve ? "Yes" : "No"))[0].customId);
+                    }
                 }
             }
         }
     }
 });
+
+client.on("messageUpdate", function(_, msg){
+    if(isStart && msg.channelId == cfg.channel_id){
+        if(msg.id == evolveMsgId){
+            setTimeout(()=>{
+                retry(()=>mc.sendSlash(MYUU_BOT_ID, "route", routeNum), 3, SLASH_SEND_FAILED);
+            }, 1000);
+        }
+    }
+});
+
 client.login(cfg.token);
