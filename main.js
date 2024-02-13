@@ -349,7 +349,7 @@ client.on("messageCreate", function(msg) {
                     setTimeout(()=>{
                         retry(()=>mc.sendSlash(MYUU_BOT_ID, "route", routeNum), 3, SLASH_SEND_FAILED);
                     }, 2000);
-                } else if(c.footer && c.footer.includes("Do you want to evolve")){
+                } else if(c.footer && c.footer.text.includes("Do you want to evolve")){
                     if(msg.components.length > 0){
                         evolveMsgId = msg.id;
                         msg.clickButton(msg.components[0].components.filter(b=>b.label == (cfg.options.autoEvolve ? "Yes" : "No"))[0].customId);
