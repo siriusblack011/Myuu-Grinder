@@ -88,7 +88,8 @@ var isStart = false,
     finishBattle = true,
     foundPokemon = false,
     trainerBattle = false,
-    throwTime = 1;
+    throwTime = 1,
+    lastActionTime = Date.now();
 
 var summary = {
     battleCount: 0,
@@ -100,6 +101,11 @@ client.on('ready', async () => {
     console.clear();
     console.log(`${client.user.username} is ready!`);
     mc = client.channels.cache.get(cfg.channel_id);
+    setInterval(()=>{
+        if(isStart && Date.now() - lastActionTime > 180000){
+            retry(()=>mc.sendSlash(MYUU_BOT_ID, "route", routeNum), 3, SLASH_SEND_FAILED);
+        }
+    }, 50);
 });
 
 client.on("messageCreate", function(msg) {
@@ -267,6 +273,7 @@ client.on("messageCreate", function(msg) {
                 let c = msg.embeds[0];
                 if(msg.components.length > 0 && ((c.footer && c.footer.text.includes("Click a move number")) || (c.description && c.description.includes("A wild") || (c.author && c.author.name.includes("Vs."))))){
                     finishBattle = false;
+                    lastActionTime = Date.now();
                     if(c.description&&c.description.includes("**")){
                         summary.battleCount += 1;
                         currentPokemon = c.description.split("**").filter(s=>s.includes("Lv"))[0];
