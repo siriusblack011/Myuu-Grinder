@@ -114,14 +114,17 @@ client.on("messageCreate", function(msg) {
                         if(args[2] && 0 < Number(args[2]) < 5){
                             isStart = true;
                             Object.keys(summary).forEach((k)=>{
-                                if(k&&k.constructor){
-                                    switch(k.constructor){
+                                if(summary[k]&&summary[k].constructor){
+                                    switch(summary[k].constructor){
                                         case Array:
                                             summary[k] = [];
+                                            break;
                                         case Number:
                                             summary[k] = 0;
+                                            break;
                                         case Object:
                                             summary[k] = {}
+                                            break;
                                     }
                                 }
                             });
