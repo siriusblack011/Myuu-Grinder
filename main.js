@@ -1,7 +1,8 @@
 const bot = require("discord.js-selfbot-v13");
-const prompt = require("prompt-sync")({ sigint: true });
+const prompt = require("readline-sync").question;
 const fs = require("node:fs");
 const { notify } = require('node-notifier');
+const proc = require("node:process");
 
 var cfg = { //Example config
     "token": "",
@@ -53,6 +54,12 @@ catch {
         cfg.channel_id = prompt("Enter Channel ID: ").replace(" ", "");
         savecfg(cfg);
 }
+
+proc.on("uncaughtException", function(err){
+    console.log(err);
+    prompt("Press Enter key to exit...");
+    proc.exit();
+});
 
 function objToMsg(title, obj){
     let s = "> ## " + title;
