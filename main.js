@@ -19,7 +19,8 @@ var cfg = { //Example config
         "randomMoveIfFailed": true,
         "autoCatch": false,
         "showSummary": true,
-        "autoEvolve": false
+        "autoEvolve": false,
+        "enemyLogging": true
     }
 }
 // Utils
@@ -284,7 +285,7 @@ client.on("messageCreate", function(msg) {
                     if(c.description&&c.description.includes("**")){
                         summary.battleCount += 1;
                         currentPokemon = c.description.split("**").filter(s=>s.includes("Lv"))[0];
-                        console.log(`Enemy ${summary.battleCount}:`, currentPokemon);
+                        if(cfg.options.enemyLogging)console.log(`Enemy ${summary.battleCount}:`, currentPokemon);
                     }
                     if(c.footer&&c.footer.text.includes("Opponent's team")){
                         trainerBattle = true;
