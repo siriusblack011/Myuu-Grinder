@@ -1,7 +1,7 @@
 const bot = require("discord.js-selfbot-v13");
 const prompt = require("readline-sync").question;
-const fs = require("node:fs");
 const { notify } = require('node-notifier');
+const fs = require("node:fs");
 const proc = require("node:process");
 
 var cfg = { //Example config
