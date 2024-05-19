@@ -8,3 +8,4 @@
 #### Auto detect shiny pokemon / filtered pokemon (pokemon that u doesn't want to kill like ash greninja)
 #### Auto catch pokemon
 #### Help command
+#### Notification support
