@@ -1,6 +1,7 @@
 # Myuu-Grinder
 #### Made for fun :) Didn't plan to maintain it.
 ### Default prefix: .
+#### Run `.help` in any channel to see list of commands.
 ### Tutorial here: https://www.youtube.com/watch?v=shY6Q457ZxM
 ### Features:
 #### Auto routing (obviously)
