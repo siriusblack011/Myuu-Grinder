@@ -1,6 +1,7 @@
 # Myuu-Grinder
 #### Made for fun :) Didn't plan to maintain it.
 ### Default prefix: .
+### Tutorial here: https://www.youtube.com/watch?v=shY6Q457ZxM
 ### Features:
 #### Auto routing (obviously)
 #### Slash command, Button support (Myuu moment)
