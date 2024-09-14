@@ -3,7 +3,6 @@ const prompt = require("readline-sync").question;
 const { notify } = require('node-notifier');
 const fs = require("node:fs");
 const proc = require("node:process");
-
 var cfg = { //Example config
     "token": "",
     "channel_id": "",
@@ -20,7 +19,9 @@ var cfg = { //Example config
         "autoCatch": false,
         "showSummary": true,
         "autoEvolve": false,
-        "enemyLogging": true
+        "autoEvolve": false,
+        "enemyLogging": true,
+        "increasePKD": true
     }
 }
 // Utils
@@ -32,7 +33,6 @@ function savecfg(){
         });
     }
 }
-
 function randint(min=0, max=1, exclude=[]) {
     var r = Math.floor(Math.random() * (max - min) + min);
     while(exclude.some(e=>e==r)){
@@ -40,7 +40,6 @@ function randint(min=0, max=1, exclude=[]) {
     }
     return r;
 }
-
 try {
     let td = fs.readFileSync("./config.json", {encoding: "utf8", "flag": "r"});
     if(td){
@@ -55,13 +54,11 @@ catch {
         cfg.channel_id = prompt("Enter Channel ID: ").replace(" ", "");
         savecfg(cfg);
 }
-
 proc.on("uncaughtException", function(err){
     console.log(err);
     prompt("Press Enter key to exit...");
     proc.exit();
 });
-
 function objToMsg(title, obj){
     let s = "> ## " + title;
     for(let i of Object.keys(obj)){
@@ -69,7 +66,6 @@ function objToMsg(title, obj){
     }
     return s;
 }
-
 async function retry(f, t, el = "Failed to execute function, retrying...") {
     let rt = 0;
     while (rt < t) {
@@ -84,13 +80,10 @@ async function retry(f, t, el = "Failed to execute function, retrying...") {
     }
     return false;
 }
-
 const client = new bot.Client();
-
 const BUTTON_CLICKED_FAILED = "Failed to click the button, retrying...",
     SLASH_SEND_FAILED = "Failed to send slash command, retrying...",
     MYUU_BOT_ID = "438057969251254293";
-
 var isStart = false,
     mc, bmove, routeNum, currentPokemon, evolveMsgId,
     finishBattle = true,
@@ -98,13 +91,11 @@ var isStart = false,
     trainerBattle = false,
     throwTime = 1,
     lastActionTime = Date.now();
-
 var summary = {
     battleCount: 0,
     foundPokemonCount: 0,
     foundPokemons: []
 }
-
 client.on('ready', async () => {
     console.clear();
     console.log(`${client.user.username} is ready!`);
@@ -115,7 +106,6 @@ client.on('ready', async () => {
         }
     }, 50);
 });
-
 client.on("messageCreate", function(msg) {
     if(msg.author.id == client.user.id){
         var args = msg.content.split(" ");
@@ -165,7 +155,7 @@ client.on("messageCreate", function(msg) {
                     }
                     msg.delete();
                     break;
-                
+
                 case "setchannel":
                     if(args[1]){
                         cfg.channel_id = args[1].trim();
@@ -178,7 +168,6 @@ client.on("messageCreate", function(msg) {
                     }
                     msg.delete();
                     break;
-
                 case "pkfilter":
                     switch(args[1]){
                         case "":
@@ -186,14 +175,13 @@ client.on("messageCreate", function(msg) {
                         case "list":
                             msg.channel.send(`> Filter List: \`${cfg.pokemonFilter.join(", ")}\``);
                             break;
-                        
+
                         case "add":
                             var pks = args.slice(2);
                             cfg.pokemonFilter = cfg.pokemonFilter.concat(pks);
                             savecfg();
                             msg.channel.send(`> Added \`${pks.join(", ")}\``);
                             break;
-
                         case "remove":
                         case "del":
                             var pks = args.slice(2);
@@ -208,7 +196,6 @@ client.on("messageCreate", function(msg) {
                     }
                     msg.delete();
                     break;
-
                 case "autocatch":
                     switch(args[1]){
                         case "":
@@ -216,7 +203,6 @@ client.on("messageCreate", function(msg) {
                         case "info":
                             msg.channel.send(objToMsg("Auto Catch Info", cfg.autocatch));
                         break;
-
                         case "set":
                             if(cfg.autocatch[args[2]] && args[3]){
                                 cfg.autocatch[args[2]] = args[3];
@@ -229,7 +215,7 @@ client.on("messageCreate", function(msg) {
                     }
                     msg.delete();
                     break;
-                
+
                 case "toggle":
                     if(cfg.options[args[1]]!=undefined){
                         cfg.options[args[1]] = !cfg.options[args[1]];
@@ -240,7 +226,7 @@ client.on("messageCreate", function(msg) {
                     }
                     msg.delete();
                     break;
-                
+
                 //OTHER COMMAND
                 case "help":
                     msg.channel.send(`> ### Help Page
@@ -261,7 +247,7 @@ client.on("messageCreate", function(msg) {
 > \\- Show/Set current bot prefix -`);
                     msg.delete();
                     break;
-                
+
                 case "prefix":
                     if(args[1]){
                         cfg.prefix = args[1];
@@ -285,6 +271,7 @@ client.on("messageCreate", function(msg) {
                     if(c.description&&c.description.includes("**")){
                         summary.battleCount += 1;
                         currentPokemon = c.description.split("**").filter(s=>s.includes("Lv"))[0];
+                        console.log(`Enemy ${summary.battleCount}:`, currentPokemon);
                         if(cfg.options.enemyLogging)console.log(`Enemy ${summary.battleCount}:`, currentPokemon);
                     }
                     if(c.footer&&c.footer.text.includes("Opponent's team")){
@@ -363,21 +350,16 @@ client.on("messageCreate", function(msg) {
                             retry(()=>mc.sendSlash(MYUU_BOT_ID, "route", routeNum), 3, SLASH_SEND_FAILED);
                         }, 1000);
                     }
-                } else if(((((c.title && c.title.includes("in a battle")) || (c.description && c.description.includes("You are currently engaged in a"))) && finishBattle) || (c.title && c.title.toLowerCase().includes("time is up!")))){
-                    setTimeout(()=>{
-                        retry(()=>mc.sendSlash(MYUU_BOT_ID, "route", routeNum), 3, SLASH_SEND_FAILED);
+                } else if(((((c.title && c.title.includes("0 Poké Diamonds")) || (c.description && c.description.includes("0 Poké Diamonds"))) && increasePokéDiamonds) || (c.title && c.title.toLowerCase().includes("0 Poké Diamonds")))){
+                    increasePokéDiamonds = true; 
+                    set amount to 50000;
+                        retry(()=>mc.sendSlash(MYUU_BOT_ID, "buy", itemitem:moltres t), 3, SLASH_SEND_FAILED);
                     }, 2000);
-                } else if(c.footer && c.footer.text.includes("Do you want to evolve")){
-                    if(msg.components.length > 0){
-                        evolveMsgId = msg.id;
-                        msg.clickButton(msg.components[0].components.filter(b=>b.label == (cfg.options.autoEvolve ? "Yes" : "No"))[0].customId);
-                    }
                 }
             }
         }
     }
 });
-
 client.on("messageUpdate", function(_, msg){
     if(isStart && msg.channelId == cfg.channel_id){
         if(msg.id == evolveMsgId){
@@ -387,5 +369,4 @@ client.on("messageUpdate", function(_, msg){
         }
     }
 });
-
 client.login(cfg.token);
